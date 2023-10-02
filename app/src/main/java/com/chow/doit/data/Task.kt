@@ -9,12 +9,12 @@ import java.text.DateFormat
 @Entity(tableName = "task_table")
 @Parcelize
 data class Task(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
     val name: String,
     val isImportant: Boolean = false,
     val isCompleted: Boolean = false,
-    val createdDate: Long = System.currentTimeMillis()
+    val createdDate: Long = System.currentTimeMillis(),
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0
 ) : Parcelable {
     val formattedDate: String get() = DateFormat.getDateTimeInstance().format(createdDate)
 }
