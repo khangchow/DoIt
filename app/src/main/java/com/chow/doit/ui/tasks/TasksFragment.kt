@@ -35,7 +35,7 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
         viewModel.tasks.observe(viewLifecycleOwner) {
             tasksAdapter.submitList(it)
         }
-        menuHost.addMenuProvider(object : MenuProvider{
+        menuHost.addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.menu_fragment_tasks, menu)
                 val searchItem = menu.findItem(R.id.action_search)
@@ -48,15 +48,16 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.action_sort_by_name -> {
-
+                        viewModel.sortOrder.value = SortOrder.BY_NAME
                         true
                     }
                     R.id.action_sort_by_created_date -> {
-
+                        viewModel.sortOrder.value = SortOrder.BY_DATE
                         true
                     }
                     R.id.action_hide_completed_tasks -> {
                         menuItem.isChecked = !menuItem.isChecked
+                        viewModel.hideCompleted.value = menuItem.isChecked
                         true
                     }
                     R.id.action_delete_completed_tasks -> {
