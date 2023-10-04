@@ -10,11 +10,15 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chow.doit.R
+import com.chow.doit.data.SortOrder
 import com.chow.doit.databinding.FragmentTasksBinding
 import com.chow.doit.util.onQueryTextChanged
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class TasksFragment : Fragment(R.layout.fragment_tasks) {
@@ -43,21 +47,25 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                 searchView.onQueryTextChanged {
                     viewModel.searchQuery.value = it
                 }
+                lifecycleScope.launch {
+                    menu.findItem(R.id.action_hide_completed_tasks).isChecked =
+                        viewModel.preferencesFlow.first().hideCompleted
+                }
             }
 
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
                     R.id.action_sort_by_name -> {
-                        viewModel.sortOrder.value = SortOrder.BY_NAME
+                        viewModel.onSortOrderSelected(SortOrder.BY_NAME)
                         true
                     }
                     R.id.action_sort_by_created_date -> {
-                        viewModel.sortOrder.value = SortOrder.BY_DATE
+                        viewModel.onSortOrderSelected(SortOrder.BY_DATE)
                         true
                     }
                     R.id.action_hide_completed_tasks -> {
                         menuItem.isChecked = !menuItem.isChecked
-                        viewModel.hideCompleted.value = menuItem.isChecked
+                        viewModel.onHideCompleted(menuItem.isChecked)
                         true
                     }
                     R.id.action_delete_completed_tasks -> {

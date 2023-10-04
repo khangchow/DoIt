@@ -1,7 +1,6 @@
 package com.chow.doit.data
 
 import androidx.room.*
-import com.chow.doit.ui.tasks.SortOrder
 import kotlinx.coroutines.flow.Flow
 
 @Dao
