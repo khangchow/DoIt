@@ -10,9 +10,11 @@ import com.chow.doit.data.TaskDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,6 +25,8 @@ class TasksViewModel @Inject constructor(
 ) : ViewModel() {
     val searchQuery = MutableStateFlow("")
     val preferencesFlow = preferencesManager.preferencesFlow
+    private val tasksEventChannel = Channel<TasksEvent>()
+    val tasksEvent = tasksEventChannel.receiveAsFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val tasksFlow = combine(
@@ -51,5 +55,22 @@ class TasksViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             taskDao.update(task.copy(isCompleted = isChecked))
         }
+    }
+
+    fun onTaskSwiped(task: Task) {
+        viewModelScope.launch(Dispatchers.IO) {
+            taskDao.delete(task)
+            tasksEventChannel.send(TasksEvent.ShowUndoDeleteTaskMessage(task))
+        }
+    }
+
+    fun onUndoDeleteClicked(task: Task) {
+        viewModelScope.launch(Dispatchers.IO) {
+            taskDao.insert(task)
+        }
+    }
+
+    sealed class TasksEvent {
+        data class ShowUndoDeleteTaskMessage(val task: Task) : TasksEvent()
     }
 }
