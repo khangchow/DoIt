@@ -5,6 +5,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.chow.doit.data.PreferencesManager
 import com.chow.doit.data.SortOrder
+import com.chow.doit.data.Task
 import com.chow.doit.data.TaskDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -40,5 +41,15 @@ class TasksViewModel @Inject constructor(
 
     fun onHideCompleted(hideCompleted: Boolean) = viewModelScope.launch(Dispatchers.IO) {
         preferencesManager.updateHideCompleted(hideCompleted)
+    }
+
+    fun onTaskSelected(task: Task) {
+
+    }
+
+    fun onTaskCheckChanged(task: Task, isChecked: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            taskDao.update(task.copy(isCompleted = isChecked))
+        }
     }
 }

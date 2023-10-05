@@ -9,10 +9,35 @@ import androidx.recyclerview.widget.RecyclerView
 import com.chow.doit.data.Task
 import com.chow.doit.databinding.ItemTaskBinding
 
-class TasksAdapter : ListAdapter<Task, TasksAdapter.TasksViewHolder>(DiffCallback()) {
+class TasksAdapter(
+    private val onItemClicked: (Task) -> Unit,
+    private val onCheckBoxChecked: (Task, Boolean) -> Unit
+) : ListAdapter<Task, TasksAdapter.TasksViewHolder>(DiffCallback()) {
 
-    class TasksViewHolder(private val binding: ItemTaskBinding) :
+    inner class TasksViewHolder(private val binding: ItemTaskBinding) :
         RecyclerView.ViewHolder(binding.root) {
+
+        init {
+            binding.apply {
+                root.setOnClickListener {
+                    val position = adapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val task = getItem(position)
+                        onItemClicked(task)
+                    }
+                }
+                cbCompleted.apply {
+                    setOnClickListener {
+                        val position = adapterPosition
+                        if (position != RecyclerView.NO_POSITION) {
+                            val task = getItem(position)
+                            onCheckBoxChecked(task, isChecked)
+                        }
+                    }
+                }
+            }
+        }
+
         fun bind(task: Task) {
             binding.apply {
                 cbCompleted.isChecked = task.isCompleted

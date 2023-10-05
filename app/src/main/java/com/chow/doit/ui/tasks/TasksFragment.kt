@@ -27,7 +27,14 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentTasksBinding.bind(view)
-        val tasksAdapter = TasksAdapter()
+        val tasksAdapter = TasksAdapter(
+            onItemClicked = {
+                viewModel.onTaskSelected(it)
+            },
+            onCheckBoxChecked = { task, isChecked ->
+                viewModel.onTaskCheckChanged(task, isChecked)
+            }
+        )
         val menuHost: MenuHost = requireActivity()
         binding.apply {
             rvTasks.apply {
