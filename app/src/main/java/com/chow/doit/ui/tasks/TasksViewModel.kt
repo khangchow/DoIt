@@ -7,6 +7,7 @@ import com.chow.doit.data.PreferencesManager
 import com.chow.doit.data.SortOrder
 import com.chow.doit.data.TaskDao
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -33,11 +34,11 @@ class TasksViewModel @Inject constructor(
     }
     val tasks = tasksFlow.asLiveData()
 
-    fun onSortOrderSelected(sortOrder: SortOrder) = viewModelScope.launch {
+    fun onSortOrderSelected(sortOrder: SortOrder) = viewModelScope.launch(Dispatchers.IO) {
         preferencesManager.updateSortOrder(sortOrder)
     }
 
-    fun onHideCompleted(hideCompleted: Boolean) = viewModelScope.launch {
+    fun onHideCompleted(hideCompleted: Boolean) = viewModelScope.launch(Dispatchers.IO) {
         preferencesManager.updateHideCompleted(hideCompleted)
     }
 }
