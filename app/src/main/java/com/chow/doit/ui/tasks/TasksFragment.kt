@@ -46,21 +46,21 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                 adapter = tasksAdapter
                 layoutManager = LinearLayoutManager(requireContext())
                 setHasFixedSize(true)
+                ItemTouchHelper(object :
+                    ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+                    override fun onMove(
+                        recyclerView: RecyclerView,
+                        viewHolder: RecyclerView.ViewHolder,
+                        target: RecyclerView.ViewHolder
+                    ) = false
+
+                    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                        val task = tasksAdapter.currentList[viewHolder.adapterPosition]
+                        viewModel.onTaskSwiped(task)
+                    }
+
+                }).attachToRecyclerView(this)
             }
-            ItemTouchHelper(object :
-                ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-                override fun onMove(
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder,
-                    target: RecyclerView.ViewHolder
-                ) = false
-
-                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                    val task = tasksAdapter.currentList[viewHolder.adapterPosition]
-                    viewModel.onTaskSwiped(task)
-                }
-
-            }).attachToRecyclerView(rvTasks)
         }
         viewModel.tasks.observe(viewLifecycleOwner) {
             tasksAdapter.submitList(it)
