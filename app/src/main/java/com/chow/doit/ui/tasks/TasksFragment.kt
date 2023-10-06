@@ -13,6 +13,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -41,31 +42,7 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
             }
         )
         val menuHost: MenuHost = requireActivity()
-        binding.apply {
-            rvTasks.apply {
-                adapter = tasksAdapter
-                layoutManager = LinearLayoutManager(requireContext())
-                setHasFixedSize(true)
-                ItemTouchHelper(object :
-                    ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-                    override fun onMove(
-                        recyclerView: RecyclerView,
-                        viewHolder: RecyclerView.ViewHolder,
-                        target: RecyclerView.ViewHolder
-                    ) = false
-
-                    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                        val task = tasksAdapter.currentList[viewHolder.adapterPosition]
-                        viewModel.onTaskSwiped(task)
-                    }
-
-                }).attachToRecyclerView(this)
-            }
-        }
-        viewModel.tasks.observe(viewLifecycleOwner) {
-            tasksAdapter.submitList(it)
-        }
-        menuHost.addMenuProvider(object : MenuProvider {
+        val menuProvider = object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 menuInflater.inflate(R.menu.menu_fragment_tasks, menu)
                 val searchItem = menu.findItem(R.id.action_search)
@@ -101,7 +78,38 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                     else -> false
                 }
             }
-        })
+        }
+        menuHost.addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        binding.apply {
+            rvTasks.apply {
+                adapter = tasksAdapter
+                layoutManager = LinearLayoutManager(requireContext())
+                setHasFixedSize(true)
+                ItemTouchHelper(object :
+                    ItemTouchHelper.SimpleCallback(
+                        0,
+                        ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                    ) {
+                    override fun onMove(
+                        recyclerView: RecyclerView,
+                        viewHolder: RecyclerView.ViewHolder,
+                        target: RecyclerView.ViewHolder
+                    ) = false
+
+                    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                        val task = tasksAdapter.currentList[viewHolder.adapterPosition]
+                        viewModel.onTaskSwiped(task)
+                    }
+
+                }).attachToRecyclerView(this)
+            }
+            fabAddTask.setOnClickListener {
+                viewModel.onAddNewTaskClicked()
+            }
+        }
+        viewModel.tasks.observe(viewLifecycleOwner) {
+            tasksAdapter.submitList(it)
+        }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.tasksEvent.collect { event ->
@@ -112,6 +120,17 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                                     viewModel.onUndoDeleteClicked(event.task)
                                 }
                                 .show()
+                        }
+                        is TasksViewModel.TasksEvent.NavigateToAddTaskScreen -> {
+                            val action =
+                                TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment("New Task")
+                            findNavController().navigate(action)
+                        }
+                        is TasksViewModel.TasksEvent.NavigateToEditTaskScreen -> {
+                            val action =
+                                TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment("Edit Task")
+                            action.task = event.task
+                            findNavController().navigate(action)
                         }
                     }
                 }
