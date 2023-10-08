@@ -5,6 +5,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -47,12 +48,18 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                 menuInflater.inflate(R.menu.menu_fragment_tasks, menu)
                 val searchItem = menu.findItem(R.id.action_search)
                 val searchView = searchItem.actionView as SearchView
-                searchView.onQueryTextChanged {
-                    viewModel.searchQuery.value = it
-                }
-                lifecycleScope.launch {
-                    menu.findItem(R.id.action_hide_completed_tasks).isChecked =
-                        viewModel.preferencesFlow.first().hideCompleted
+                searchView.apply {
+                    if (viewModel.searchQuery.value.isNullOrBlank().not()) {
+                        searchItem.expandActionView()
+                        setQuery(viewModel.searchQuery.value, false)
+                    }
+                    onQueryTextChanged {
+                        viewModel.searchQuery.value = it
+                    }
+                    lifecycleScope.launch {
+                        menu.findItem(R.id.action_hide_completed_tasks).isChecked =
+                            viewModel.preferencesFlow.first().hideCompleted
+                    }
                 }
             }
 
