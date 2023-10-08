@@ -23,10 +23,12 @@ class TasksViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     state: SavedStateHandle
 ) : ViewModel() {
-    val searchQuery = state.getLiveData("searchQuery", "")
+    private val _searchQuery = state.getLiveData("searchQuery", "")
+    val searchQuery: LiveData<String> = _searchQuery
     val preferencesFlow = preferencesManager.preferencesFlow
     private val tasksEventChannel = Channel<TasksEvent>()
     val tasksEvent = tasksEventChannel.receiveAsFlow()
+    var currentQuery = ""
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val tasksFlow = combine(
@@ -38,6 +40,14 @@ class TasksViewModel @Inject constructor(
         taskDao.getTasks(query, filterPreferences.sortOrder, filterPreferences.hideCompleted)
     }
     val tasks = tasksFlow.asLiveData()
+
+    fun onViewCreated() {
+        _searchQuery.value = currentQuery
+    }
+
+    fun onQueryTextChanged(query: String) {
+        _searchQuery.value = query
+    }
 
     fun onSortOrderSelected(sortOrder: SortOrder) = viewModelScope.launch(Dispatchers.IO) {
         preferencesManager.updateSortOrder(sortOrder)
@@ -83,6 +93,10 @@ class TasksViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             tasksEventChannel.send(TasksEvent.ShowTaskSavedConfirmationMessage(text))
         }
+
+    fun onDestroyView() {
+        currentQuery = searchQuery.value ?: ""
+    }
 
     sealed class TasksEvent {
         data class ShowUndoDeleteTaskMessage(val task: Task) : TasksEvent()

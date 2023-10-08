@@ -33,6 +33,7 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel.onViewCreated()
         val binding = FragmentTasksBinding.bind(view)
         val tasksAdapter = TasksAdapter(
             onItemClicked = { task ->
@@ -49,12 +50,14 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                 val searchItem = menu.findItem(R.id.action_search)
                 val searchView = searchItem.actionView as SearchView
                 searchView.apply {
-                    if (viewModel.searchQuery.value.isNullOrBlank().not()) {
-                        searchItem.expandActionView()
-                        setQuery(viewModel.searchQuery.value, false)
+                    when {
+                        viewModel.searchQuery.value.isNullOrBlank().not() -> {
+                            searchItem.expandActionView()
+                            setQuery(viewModel.searchQuery.value, false)
+                        }
                     }
                     onQueryTextChanged {
-                        viewModel.searchQuery.value = it
+                        viewModel.onQueryTextChanged(it)
                     }
                     lifecycleScope.launch {
                         menu.findItem(R.id.action_hide_completed_tasks).isChecked =
@@ -154,5 +157,10 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                 }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.onDestroyView()
     }
 }
