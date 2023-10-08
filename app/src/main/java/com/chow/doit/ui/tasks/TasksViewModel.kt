@@ -5,6 +5,8 @@ import com.chow.doit.data.PreferencesManager
 import com.chow.doit.data.SortOrder
 import com.chow.doit.data.Task
 import com.chow.doit.data.TaskDao
+import com.chow.doit.ui.ADD_TASK_RESULT_OK
+import com.chow.doit.ui.EDIT_TASK_RESULT_OK
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,40 +47,47 @@ class TasksViewModel @Inject constructor(
         preferencesManager.updateHideCompleted(hideCompleted)
     }
 
-    fun onTaskSelected(task: Task) {
-        viewModelScope.launch(Dispatchers.IO) {
-            tasksEventChannel.send(TasksEvent.NavigateToEditTaskScreen(task))
+    fun onTaskSelected(task: Task) = viewModelScope.launch(Dispatchers.IO) {
+        tasksEventChannel.send(TasksEvent.NavigateToEditTaskScreen(task))
+    }
+
+    fun onTaskCheckChanged(task: Task, isChecked: Boolean) = viewModelScope.launch(Dispatchers.IO) {
+        taskDao.update(task.copy(isCompleted = isChecked))
+    }
+
+    fun onTaskSwiped(task: Task) = viewModelScope.launch(Dispatchers.IO) {
+        taskDao.delete(task)
+        tasksEventChannel.send(TasksEvent.ShowUndoDeleteTaskMessage(task))
+    }
+
+    fun onUndoDeleteClicked(task: Task) = viewModelScope.launch(Dispatchers.IO) {
+        taskDao.insert(task)
+    }
+
+    fun onAddNewTaskClicked() = viewModelScope.launch(Dispatchers.IO) {
+        tasksEventChannel.send(TasksEvent.NavigateToAddTaskScreen)
+    }
+
+    fun onAddEditResult(result: Int) = viewModelScope.launch(Dispatchers.IO) {
+        when (result) {
+            ADD_TASK_RESULT_OK -> {
+                showTaskSavedConfirmationMessage("Task added")
+            }
+            EDIT_TASK_RESULT_OK -> {
+                showTaskSavedConfirmationMessage("Task updated")
+            }
         }
     }
 
-    fun onTaskCheckChanged(task: Task, isChecked: Boolean) {
+    private fun showTaskSavedConfirmationMessage(text: String) =
         viewModelScope.launch(Dispatchers.IO) {
-            taskDao.update(task.copy(isCompleted = isChecked))
+            tasksEventChannel.send(TasksEvent.ShowTaskSavedConfirmationMessage(text))
         }
-    }
-
-    fun onTaskSwiped(task: Task) {
-        viewModelScope.launch(Dispatchers.IO) {
-            taskDao.delete(task)
-            tasksEventChannel.send(TasksEvent.ShowUndoDeleteTaskMessage(task))
-        }
-    }
-
-    fun onUndoDeleteClicked(task: Task) {
-        viewModelScope.launch(Dispatchers.IO) {
-            taskDao.insert(task)
-        }
-    }
-
-    fun onAddNewTaskClicked() {
-        viewModelScope.launch(Dispatchers.IO) {
-            tasksEventChannel.send(TasksEvent.NavigateToAddTaskScreen)
-        }
-    }
 
     sealed class TasksEvent {
         data class ShowUndoDeleteTaskMessage(val task: Task) : TasksEvent()
         data class NavigateToEditTaskScreen(val task: Task) : TasksEvent()
         object NavigateToAddTaskScreen : TasksEvent()
+        data class ShowTaskSavedConfirmationMessage(val msg: String) : TasksEvent()
     }
 }

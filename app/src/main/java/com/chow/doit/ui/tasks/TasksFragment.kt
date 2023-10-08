@@ -5,11 +5,11 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -114,6 +114,10 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                 viewModel.onAddNewTaskClicked()
             }
         }
+        setFragmentResultListener("add_edit_request") { _, bundle ->
+            val result = bundle.getInt("add_edit_result")
+            viewModel.onAddEditResult(result)
+        }
         viewModel.tasks.observe(viewLifecycleOwner) {
             tasksAdapter.submitList(it)
         }
@@ -139,6 +143,13 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                             action.task = event.task
                             findNavController().navigate(action)
                         }
+                        is TasksViewModel.TasksEvent.ShowTaskSavedConfirmationMessage -> Snackbar.make(
+                            requireView(),
+                            "Task deleted",
+                            Snackbar.LENGTH_LONG
+                        )
+                            .setText(event.msg)
+                            .show()
                     }
                 }
             }
