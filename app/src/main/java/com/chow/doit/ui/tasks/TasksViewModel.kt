@@ -21,7 +21,7 @@ class TasksViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     state: SavedStateHandle
 ) : ViewModel() {
-    val searchQuery = state.getLiveData("searchQuery", "Test")
+    val searchQuery = state.getLiveData("searchQuery", "")
     val preferencesFlow = preferencesManager.preferencesFlow
     private val tasksEventChannel = Channel<TasksEvent>()
     val tasksEvent = tasksEventChannel.receiveAsFlow()
