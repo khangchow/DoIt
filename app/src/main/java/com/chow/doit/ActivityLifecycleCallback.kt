@@ -94,6 +94,15 @@ fun Activity.registerFragmentLifecycleCallbacks() {
                     super.onFragmentDestroyed(fm, f)
                     Log.d(DEBUG_FRAGMENT, "${f::class.java.simpleName} --> onDestroyed")
                 }
+
+                override fun onFragmentSaveInstanceState(
+                    fm: FragmentManager,
+                    f: Fragment,
+                    outState: Bundle
+                ) {
+                    super.onFragmentSaveInstanceState(fm, f, outState)
+                    Log.d(DEBUG_FRAGMENT, "${f::class.java.simpleName} --> onSaveInstanceState")
+                }
             }, true
         )
     }
