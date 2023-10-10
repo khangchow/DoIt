@@ -82,7 +82,7 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                         true
                     }
                     R.id.action_delete_completed_tasks -> {
-
+                        viewModel.onDeleteAllCompletedTasksClicked()
                         true
                     }
                     else -> false
@@ -153,6 +153,11 @@ class TasksFragment : Fragment(R.layout.fragment_tasks) {
                         )
                             .setText(event.msg)
                             .show()
+                        TasksViewModel.TasksEvent.NavigateToDeleteAllCompletedScreen -> {
+                            val action =
+                                TasksFragmentDirections.actionGlobalDeleteAllCompletedDialogFragment()
+                            findNavController().navigate(action)
+                        }
                     }
                 }
             }
