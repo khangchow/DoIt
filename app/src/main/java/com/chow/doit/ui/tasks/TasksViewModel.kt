@@ -28,7 +28,6 @@ class TasksViewModel @Inject constructor(
     val preferencesFlow = preferencesManager.preferencesFlow
     private val tasksEventChannel = Channel<TasksEvent>()
     val tasksEvent = tasksEventChannel.receiveAsFlow()
-    var currentQuery = ""
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val tasksFlow = combine(
@@ -40,10 +39,6 @@ class TasksViewModel @Inject constructor(
         taskDao.getTasks(query, filterPreferences.sortOrder, filterPreferences.hideCompleted)
     }
     val tasks = tasksFlow.asLiveData()
-
-    fun onViewCreated() {
-        _searchQuery.value = currentQuery
-    }
 
     fun onQueryTextChanged(query: String) {
         _searchQuery.value = query
@@ -93,10 +88,6 @@ class TasksViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             tasksEventChannel.send(TasksEvent.ShowTaskSavedConfirmationMessage(text))
         }
-
-    fun onDestroyView() {
-        currentQuery = searchQuery.value ?: ""
-    }
 
     fun onDeleteAllCompletedTasksClicked() = viewModelScope.launch(Dispatchers.IO) {
         tasksEventChannel.send(TasksEvent.NavigateToDeleteAllCompletedScreen)
